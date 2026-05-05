@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: chgaming_postgres
+    environment:
+      POSTGRES_USER: chgaming_user
+      POSTGRES_PASSWORD: chgaming_secure_pass_2024
+      POSTGRES_DB: chgaming_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./packages/database/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - chgaming_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chgaming_user -d chgaming_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: chgaming_redis
+    command: redis-server --requirepass chgaming_redis_pass_2024
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - chgaming_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: .
+      dockerfile: packages/server/Dockerfile
+    container_name: chgaming_server
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgres://chgaming_user:chgaming_secure_pass_2024@postgres:5432/chgaming_db
+      REDIS_URL: redis://:chgaming_redis_pass_2024@redis:6379
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production-2024
+      JWT_EXPIRES_IN: 1h
+      PAYPAL_CLIENT_ID: sandbox_client_id
+      PAYPAL_CLIENT_SECRET: sandbox_client_secret
+      PAYPAL_API_URL: https://api-m.sandbox.paypal.com
+      PORT: 5000
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - chgaming_network
+    volumes:
+      - ./packages/server:/app
+      - /app/node_modules
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: chgaming_web
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:5000/api
+      NODE_ENV: development
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server
+    networks:
+      - chgaming_network
+    volumes:
+      - ./apps/web:/app
+      - /app/node_modules
+      - /app/.next
+
+  nginx:
+    image: nginx:alpine
+    container_name: chgaming_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - web
+      - server
+    networks:
+      - chgaming_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  chgaming_network:
+    driver: bridge

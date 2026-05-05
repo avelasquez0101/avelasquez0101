@@ -1,0 +1,13 @@
+{
+  "name": "@chgaming/database",
+  "version": "1.0.0",
+  "description": "Database migrations and utilities for ChGaming Platform",
+  "main": "index.js",
+  "scripts": {
+    "migrate": "node scripts/migrate.js",
+    "seed": "node scripts/seed.js"
+  },
+  "dependencies": {
+    "pg": "^8.11.3"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "chgaming-platform",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "migrate": "cd packages/server && npm run migrate",
+    "seed": "cd packages/server && npm run seed"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "prettier": "^3.0.0",
+    "eslint": "^8.50.0"
+  },
+  "packageManager": "npm@9.6.7",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}

@@ -1,0 +1,39 @@
+# Build stage
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Install dependencies
+COPY package.json ./
+COPY turbo.json ./
+COPY pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml ./
+
+RUN corepack enable pnpm && pnpm install --frozen-lockfile
+
+# Copy source code
+COPY . .
+
+# Build specific apps
+RUN pnpm build --filter=web... --filter=server...
+
+# Server production image
+FROM node:20-alpine AS server-runner
+
+WORKDIR /app
+
+COPY package.json ./
+COPY pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml ./
+COPY turbo.json ./
+
+RUN corepack enable pnpm && pnpm install --prod --frozen-lockfile
+
+COPY --from=builder /app/packages/database ./packages/database
+COPY --from=builder /app/packages/server/dist ./packages/server/dist
+COPY --from=builder /app/packages/server/package.json ./packages/server/
+
+ENV NODE_ENV=production
+EXPOSE 3001
+
+CMD ["node", "packages/server/dist/index.js"]
