@@ -25,10 +25,10 @@ echo -e "${YELLOW}⏳ Esperando a que los servicios estén listos (15 segundos).
 sleep 15
 
 echo -e "${BLUE}📊 Ejecutando migraciones de base de datos...${NC}"
-docker-compose run --rm server node packages/server/dist/scripts/migrate.js
+docker-compose run --rm server npm run migrate
 
 echo -e "${BLUE}🌱 Insertando datos iniciales (seeds)...${NC}"
-docker-compose run --rm server node packages/server/dist/scripts/seed.js
+docker-compose run --rm server npm run seed
 
 echo -e "${GREEN}🚀 Iniciando todos los servicios...${NC}"
 docker-compose up -d

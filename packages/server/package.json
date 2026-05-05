@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
-    "migrate": "cd ../database && npm run migrate",
-    "seed": "cd ../database && npm run seed"
+    "migrate": "node src/scripts/migrate.js",
+    "seed": "node src/scripts/seed.js"
   },
   "dependencies": {
     "express": "^4.18.2",

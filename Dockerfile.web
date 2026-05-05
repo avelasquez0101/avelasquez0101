@@ -6,16 +6,15 @@ WORKDIR /app
 # Install dependencies
 COPY package.json ./
 COPY turbo.json ./
-COPY pnpm-lock.yaml ./
 COPY pnpm-workspace.yaml ./
 
-RUN corepack enable pnpm && pnpm install --frozen-lockfile
+RUN npm install
 
 # Copy source code
 COPY . .
 
 # Build web app
-RUN pnpm build --filter=web
+RUN npm run build --workspace=@chgaming/web
 
 # Production image
 FROM nginx:alpine AS runner

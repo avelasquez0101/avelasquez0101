@@ -5,9 +5,9 @@ services:
     image: postgres:15-alpine
     container_name: chgaming_postgres
     environment:
-      POSTGRES_USER: chgaming_user
-      POSTGRES_PASSWORD: chgaming_secure_pass_2024
-      POSTGRES_DB: chgaming_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: chgaming
     ports:
       - "5432:5432"
     volumes:
@@ -16,7 +16,7 @@ services:
     networks:
       - chgaming_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U chgaming_user -d chgaming_db"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d chgaming"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -24,7 +24,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: chgaming_redis
-    command: redis-server --requirepass chgaming_redis_pass_2024
+    command: redis-server --requirepass redis123
     ports:
       - "6379:6379"
     volumes:
@@ -40,12 +40,18 @@ services:
   server:
     build:
       context: .
-      dockerfile: packages/server/Dockerfile
+      dockerfile: Dockerfile.server
     container_name: chgaming_server
     environment:
       NODE_ENV: development
-      DATABASE_URL: postgres://chgaming_user:chgaming_secure_pass_2024@postgres:5432/chgaming_db
-      REDIS_URL: redis://:chgaming_redis_pass_2024@redis:6379
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: chgaming
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: redis123
       JWT_SECRET: your-super-secret-jwt-key-change-in-production-2024
       JWT_EXPIRES_IN: 1h
       PAYPAL_CLIENT_ID: sandbox_client_id
@@ -61,40 +67,19 @@ services:
         condition: service_healthy
     networks:
       - chgaming_network
-    volumes:
-      - ./packages/server:/app
-      - /app/node_modules
+    command: sh -c "sleep 10 && npm run migrate && npm run seed && node packages/server/src/index.js"
 
   web:
     build:
       context: .
-      dockerfile: apps/web/Dockerfile
+      dockerfile: Dockerfile.web
     container_name: chgaming_web
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:5000/api
+      NEXT_PUBLIC_API_URL: http://localhost/api
       NODE_ENV: development
     ports:
-      - "3000:3000"
+      - "3000:80"
     depends_on:
-      - server
-    networks:
-      - chgaming_network
-    volumes:
-      - ./apps/web:/app
-      - /app/node_modules
-      - /app/.next
-
-  nginx:
-    image: nginx:alpine
-    container_name: chgaming_nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-    depends_on:
-      - web
       - server
     networks:
       - chgaming_network
