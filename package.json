@@ -1,6 +1,7 @@
 {
   "name": "chgaming-platform",
   "private": true,
+  "packageManager": "npm@10.2.3",
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",

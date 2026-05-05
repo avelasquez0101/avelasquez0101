@@ -88,4 +88,14 @@ export const productsApi = {
   getMyOrders: (params) => apiClient.get('/products/orders/my', { params }),
 };
 
+// Users API
+export const usersApi = {
+  getProfile: () => apiClient.get('/users/profile'),
+  updateProfile: (data) => apiClient.put('/users/profile', data),
+  getStats: () => apiClient.get('/users/stats'),
+  getTransactions: (params) => apiClient.get('/users/transactions', { params }),
+};
+
+// Export default client and named exports for convenience
 export default apiClient;
+export { apiClient as api };

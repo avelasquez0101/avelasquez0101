@@ -96,4 +96,6 @@ export const usersApi = {
   getTransactions: (params?: any) => apiClient.get('/users/transactions', { params }),
 };
 
+// Export default client and named exports for convenience
 export default apiClient;
+export { apiClient as api };
