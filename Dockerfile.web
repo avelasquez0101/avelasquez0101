@@ -3,36 +3,56 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy all root configuration files
-COPY package.json pnpm-workspace.yaml turbo.json ./
+# Install necessary build tools for native modules
+RUN apk add --no-cache libc6-compat python3 make g++
 
-# Install ALL dependencies (including dev) for the entire monorepo
+# Copy root configuration files
+COPY package.json turbo.json pnpm-workspace.yaml ./
+
+# Copy all package.json files first for better caching
+COPY apps/web/package.json ./apps/web/
+COPY apps/mobile/package.json ./apps/mobile/
+COPY packages/server/package.json ./packages/server/
+COPY packages/database/package.json ./packages/database/
+COPY packages/ui/package.json ./packages/ui/
+COPY packages/config/package.json ./packages/config/
+COPY packages/eslint-config/package.json ./packages/eslint-config/
+
+# Install all dependencies
 RUN npm install --legacy-peer-deps
 
-# Copy all source code
-COPY packages ./packages
-COPY apps ./apps
+# Copy the rest of the application code
+COPY . .
 
-# Build the web app using workspace command
-WORKDIR /app/apps/web
-RUN npm run build
+# Build the web app from the root directory
+WORKDIR /app
+RUN npm run build --workspace=@chgaming/web
 
-# Production stage - use Node.js to serve Next.js standalone
+# Production stage
 FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-ENV NODE_ENV=production
-ENV PORT=3000
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
 
-# Copy package.json for web app
-COPY apps/web/package.json ./
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
 
-# Copy built app from builder
+# Copy standalone output (created by next.config.js output: 'standalone')
 COPY --from=builder /app/apps/web/.next/standalone ./
-COPY --from=builder /app/apps/web/.next/static ./.next/static
-COPY --from=builder /app/apps/web/public ./public
+COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder /app/apps/web/public ./apps/web/public
+
+# Set correct ownership
+RUN chown -R nextjs:nodejs /app
+
+USER nextjs
 
 EXPOSE 3000
+
+ENV PORT 3000
+ENV HOSTNAME "0.0.0.0"
 
 CMD ["node", "server.js"]
