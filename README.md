@@ -1,257 +1,213 @@
-# ChGaming Platform
+# 🎮 ChGaming Platform
 
-Plataforma integral para gestión de torneos de videojuegos y comercio electrónico con enfoque en retención de usuarios y monetización.
+Plataforma integral para gestión de torneos de videojuegos y comercio electrónico gamer.
 
-## 🎮 Características Principales
+## 🚀 Características Principales
 
 ### Torneos
-- Creación y gestión de torneos para Free Fire, COD Mobile, Mobile Legends y Wild Rift
-- Sistema de brackets automáticos
-- Validación de resultados con capturas de pantalla
-- Distribución automática de premios (Top 3)
+- **Juegos Soportados**: Free Fire, COD Mobile, Mobile Legends, Wild Rift
+- **Gestión Centralizada**: Solo administradores pueden crear/editar torneos
+- **Brackets Automáticos**: Generación automática de llaves
+- **Validación de Resultados**: Carga de capturas y validación manual
+- **Premios Automatizados**: Distribución automática para Top 3
 
 ### Economía Dual
 - **Chcoins**: Moneda virtual interna
-- **USD**: Saldo real mediante PayPal
-- Sistema de pagos híbrido (combinación de ambas monedas)
+- **USD**: Saldo real vía PayPal
+- **Checkout Adaptativo**: Pago combinado (Chcoins + USD)
+- **PayPal Integration**: Sandbox configurado
 
 ### Gamificación
-- XP por participación
-- Multiplicadores por rachas diarias
-- Sistema de niveles VIP
-- Ranking dinámico global y por juego
+- **XP y Niveles**: Sistema de experiencia por participación
+- **Rachas**: Multiplicador por participación consecutiva (3+ días)
+- **Membresía VIP**: Bonos de XP y beneficios exclusivos
+- **Ranking Dinámico**: Líderes globales y por juego
 
 ### Tienda Híbrida
-- Productos físicos (periféricos, ropa gamer)
-- Productos virtuales (skins, diamantes, gift cards)
-- Checkout adaptativo multi-moneda
+- **Productos Físicos**: Periféricos, ropa gamer
+- **Productos Virtuales**: Skins, diamantes, gift cards
+- **Inventario**: Gestión de stock en tiempo real
 
-## 🏗️ Arquitectura Tecnológica
+## 🛠️ Stack Tecnológico
 
-### Stack
-- **Frontend Web**: Next.js 14 + React + TypeScript + TailwindCSS
-- **Backend**: Node.js + Express + TypeScript
-- **Base de Datos**: PostgreSQL
-- **Cache/Rate Limiting**: Redis
-- **Proxy/Load Balancer**: Nginx
-- **Monorepo**: TurboRepo
+- **Frontend Web**: Next.js 14, React, TypeScript, Tailwind CSS
+- **Backend**: Node.js, Express, PostgreSQL, Redis
+- **Mobile**: React Native (Expo) - *en desarrollo*
+- **Infraestructura**: Docker, Docker Compose, Nginx
+- **Autenticación**: JWT con refresh tokens
+- **Pagos**: PayPal SDK
 
-### Estructura del Proyecto
-```
-chgaming-platform/
-├── apps/
-│   ├── web/              # Aplicación Next.js
-│   └── mobile/           # React Native (próximamente)
-├── packages/
-│   ├── database/         # Migraciones y seeds SQL
-│   ├── server/           # Backend Express
-│   ├── ui/               # Componentes compartidos
-│   └── utils/            # Utilidades compartidas
-├── docker-compose.yml    # Orquestación Docker
-└── start.sh             # Script de inicio
-```
-
-## 🚀 Inicio Rápido
+## 📦 Instalación y Ejecución
 
 ### Requisitos Previos
 - Docker y Docker Compose
 - Node.js 20+ (para desarrollo local)
 
-### Ejecutar con Docker (Recomendado)
+### Ejecución con Docker (Recomendado)
 
 ```bash
-# Clonar el repositorio
-git clone <repo-url>
+# Clonar repositorio
 cd chgaming-platform
 
-# Iniciar la plataforma
+# Dar permisos al script
+chmod +x start.sh
+
+# Ejecutar todo el sistema
 ./start.sh
 ```
 
-La aplicación estará disponible en:
-- **Frontend**: http://localhost
-- **API Backend**: http://localhost/api
-- **PostgreSQL**: localhost:5432
-- **Redis**: localhost:6379
+El script:
+1. Construye todas las imágenes Docker
+2. Inicia PostgreSQL y Redis
+3. Espera a que los servicios estén listos
+4. Ejecuta migraciones de base de datos
+5. Inserta datos iniciales (seed)
+6. Inicia backend y frontend
+7. Inicia Nginx como reverse proxy
 
-### Credenciales por Defecto
-```
-Email: admin@chgaming.com
-Password: admin123
-```
+### Acceso al Sistema
+
+| Servicio | URL | Credenciales |
+|----------|-----|--------------|
+| Frontend | http://localhost | - |
+| Login Admin | http://localhost/login | admin@chgaming.com / admin123 |
+| API | http://localhost/api | - |
+| Health Check | http://localhost/health | - |
+| PostgreSQL | localhost:5432 | postgres / postgres |
+| Redis | localhost:6379 | password: redis123 |
 
 ### Desarrollo Local
 
 ```bash
 # Instalar dependencias
-pnpm install
+npm install
 
-# Iniciar servicios de infraestructura
-docker-compose up -d postgres redis
+# Backend (puerto 5000)
+cd packages/server
+npm run dev
 
-# Ejecutar migraciones
-pnpm --filter=server migrate
-pnpm --filter=server seed
-
-# Iniciar backend
-pnpm --filter=server dev
-
-# Iniciar frontend (en otra terminal)
-pnpm --filter=web dev
+# Frontend (puerto 3000)
+cd apps/web
+npm run dev
 ```
 
-## 📊 Base de Datos
+## 📊 Estructura del Proyecto
 
-### Tablas Principales
-- `users`: Usuarios con sistema de XP, niveles y VIP
-- `roles`: Roles y permisos
-- `tournaments`: Torneos con configuración completa
-- `tournament_participants`: Inscripciones a torneos
-- `products`: Catálogo de productos físicos/virtuales
-- `transactions`: Historial de transacciones auditables
-- `user_streaks`: Seguimiento de rachas diarias
+```
+chgaming-platform/
+├── apps/
+│   ├── mobile/          # App React Native
+│   └── web/             # Next.js frontend
+├── packages/
+│   ├── database/        # Migraciones y seeds SQL
+│   ├── server/          # Backend Express
+│   ├── ui/              # Componentes compartidos
+│   └── utils/           # Utilidades compartidas
+├── docker-compose.yml   # Orquestación Docker
+├── nginx.conf           # Configuración Nginx
+├── start.sh             # Script de inicio
+└── README.md
+```
 
-### Migraciones
-Las migraciones se encuentran en `packages/database/migrations/` y se ejecutan automáticamente al iniciar.
+## 🔐 Seguridad Implementada
 
-## 🔐 Seguridad
+- **Helmet.js**: Headers de seguridad HTTP
+- **CORS**: Configuración estricta de orígenes
+- **Rate Limiting**: Prevención de ataques DDoS (Redis distribuido)
+- **BCrypt**: Hash de contraseñas con salt rounds
+- **JWT**: Tokens firmados con expiración configurable
+- **Validación Joi**: Sanitización de inputs
+- **Nginx**: Reverse proxy con rate limiting adicional
 
-- Autenticación JWT con tokens de acceso y refresco
-- Hash de contraseñas con BCrypt
-- Rate limiting distribuido con Redis
-- Protección contra inyección SQL
-- Headers de seguridad con Helmet
-- CORS configurado estrictamente
-- Validación de entradas con Joi
-
-## 💰 Monetización
-
-### Membresías VIP
-- Bonus de XP multiplicador
-- Acceso anticipado a torneos
-- Descuentos en la tienda
-- Badge exclusivo
-
-### Publicidad
-- Espacios nativos en el feed de torneos
-- Anuncios segmentados por juego favorito
-- Sponsorships de torneos
-
-### Comisión por Transacciones
-- Porcentaje en compras con USD
-- Fee por retiro de premios
-
-## 📱 Endpoints API Principales
+## 🎯 Endpoints API Principales
 
 ### Autenticación
-```
-POST /api/auth/register     # Registro de usuario
-POST /api/auth/login        # Login
-POST /api/auth/refresh      # Refrescar token
-POST /api/auth/logout       # Logout
-```
+- `POST /api/auth/register` - Registro de usuario
+- `POST /api/auth/login` - Inicio de sesión
+- `POST /api/auth/refresh` - Refresh token
+- `GET /api/auth/me` - Perfil actual
+- `POST /api/auth/logout` - Cerrar sesión
 
 ### Torneos
-```
-GET  /api/tournaments       # Listar torneos
-POST /api/tournaments       # Crear torneo (admin)
-GET  /api/tournaments/:id   # Detalle de torneo
-POST /api/tournaments/:id/join  # Inscribirse
-POST /api/tournaments/:id/result  # Cargar resultado
-```
+- `GET /api/tournaments` - Listar torneos (con filtros)
+- `GET /api/tournaments/:id` - Detalle de torneo
+- `POST /api/tournaments` - Crear torneo (admin)
+- `POST /api/tournaments/:id/register` - Inscribirse
+- `POST /api/tournaments/:id/results` - Cargar resultados (admin)
 
 ### Productos
-```
-GET  /api/products          # Listar productos
-POST /api/products          # Crear producto (admin)
-POST /api/transactions/purchase  # Comprar producto
-```
+- `GET /api/products` - Catálogo de productos
+- `GET /api/products/:id` - Detalle de producto
+- `POST /api/products/purchase` - Comprar producto
+- `GET /api/products/orders` - Historial de compras
 
-### Usuario
-```
-GET  /api/users/me          # Perfil propio
-PUT  /api/users/me          # Actualizar perfil
-GET  /api/users/me/stats    # Estadísticas
-GET  /api/leaderboard       # Ranking
-```
+### Ranking
+- `GET /api/leaderboard/global` - Ranking global
+- `GET /api/leaderboard/game/:game` - Ranking por juego
+- `GET /api/leaderboard/user/:userId` - Posición de usuario
 
-## 🎯 Sistema de Ranking
+## 💰 Modelo de Monetización
 
-### Fórmula de XP
-```javascript
-XP Base por Participación = 100
-XP por Victoria = 500
-Bonus por Racha = XP * (1 + rachaActual * 0.1)
-Bonus VIP = XP * 1.5
-XP Total = (XP Base + Bonus) * Multiplicadores
-```
+1. **Membresías VIP**: Suscripción mensual con beneficios
+2. **Comisión por Torneo**: Porcentaje del prize pool
+3. **Publicidad Nativa**: Espacios en feed de torneos
+4. **Margen en Tienda**: Diferencial en productos
 
-### Niveles
-- Nivel 1-10: Novato
-- Nivel 11-30: Intermedio
-- Nivel 31-50: Experto
-- Nivel 50+: Leyenda
+## 📈 Sistema de Rachas
 
-## 🔧 Variables de Entorno
+| Días Consecutivos | Multiplicador |
+|-------------------|---------------|
+| 1-2 días | 1.0x |
+| 3-6 días | 1.5x |
+| 7+ días | 2.0x |
 
-Crear archivo `.env` en la raíz:
+## 🔔 Notificaciones Push
 
-```env
-# Database
-DATABASE_URL=postgresql://postgres:postgres@postgres:5432/chgaming
+El sistema envía notificaciones segmentadas:
+- Nuevos torneos del juego favorito del usuario
+- Productos relacionados con su historial
+- Recordatorios de torneos próximos
+- Recompensas de rachas disponibles
 
-# Redis
-REDIS_HOST=redis
-REDIS_PORT=6379
-REDIS_PASSWORD=redis123
+## 📝 Variables de Entorno
 
-# JWT
-JWT_SECRET=tu_secreto_muy_seguro_cambialo_en_produccion
-JWT_EXPIRES_IN=15m
-JWT_REFRESH_EXPIRES_IN=7d
+Ver `.env.example` para referencia completa. Las principales:
 
-# PayPal
+```bash
+DATABASE_URL=postgresql://postgres:postgres@db:5432/chgaming
+REDIS_URL=redis://:redis123@redis:6379
+JWT_SECRET=tu_secreto_super_seguro
 PAYPAL_CLIENT_ID=tu_client_id
 PAYPAL_CLIENT_SECRET=tu_client_secret
-PAYPAL_MODE=sandbox
-
-# App
-NODE_ENV=development
-PORT=3001
-FRONTEND_URL=http://localhost
 ```
-
-## 📈 Escalabilidad
-
-- Balanceo de carga con Nginx
-- Cache distribuido con Redis
-- Pool de conexiones a PostgreSQL
-- Rate limiting por IP
-- Preparado para múltiples instancias del backend
 
 ## 🧪 Testing
 
 ```bash
-# Tests unitarios
-pnpm test
+# Tests de backend
+cd packages/server
+npm test
 
-# Tests de integración
-pnpm test:integration
-
-# Tests de carga
-pnpm test:load
+# Tests de carga (simulación)
+npm run load-test
 ```
+
+## 🤝 Contribución
+
+1. Fork el repositorio
+2. Crea una rama feature (`git checkout -b feature/amazing`)
+3. Commit tus cambios (`git commit -m 'Add amazing feature'`)
+4. Push a la rama (`git push origin feature/amazing`)
+5. Abre un Pull Request
 
 ## 📄 Licencia
 
-MIT License - ver archivo LICENSE para detalles.
+MIT License - ver LICENSE para detalles.
 
-## 👥 Contacto
+## 👨‍💻 Autor
 
-Para soporte o consultas comerciales:
-- Email: support@chgaming.com
-- Discord: https://discord.gg/chgaming
+ChGaming Team - Plataforma desarrollada para la comunidad gamer.
 
 ---
 
-**Hecho con ❤️ para la comunidad gamer**
+**¡Listo para competir! 🎮🏆**

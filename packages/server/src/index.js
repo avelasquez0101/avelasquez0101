@@ -8,6 +8,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const tournamentsRoutes = require('./routes/tournaments');
 const productsRoutes = require('./routes/products');
+const leaderboardRoutes = require('./routes/leaderboard');
 const { apiLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
@@ -43,11 +44,12 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/tournaments', tournamentsRoutes);
 app.use('/api/products', productsRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err);
-  
+
   res.status(err.status || 500).json({
     error: err.message || 'Internal server error',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
@@ -69,19 +71,19 @@ const startServer = () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   });
-  
+
   return server;
 };
 
 const shutdown = () => {
   console.log('Shutting down gracefully...');
-  
+
   if (server) {
     server.close(() => {
       console.log('HTTP server closed');
       process.exit(0);
     });
-    
+
     // Force close after 10 seconds
     setTimeout(() => {
       console.error('Forcing shutdown');
