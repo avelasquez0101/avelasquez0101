@@ -12,7 +12,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./packages/database/migrations:/docker-entrypoint-initdb.d
     networks:
       - chgaming_network
     healthcheck:
@@ -67,7 +66,7 @@ services:
         condition: service_healthy
     networks:
       - chgaming_network
-    command: sh -c "sleep 10 && npm run migrate && npm run seed && node packages/server/src/index.js"
+    command: sh -c "sleep 15 && node packages/server/src/index.js"
 
   web:
     build:

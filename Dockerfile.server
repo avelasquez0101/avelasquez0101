@@ -3,14 +3,13 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install dependencies
-COPY package.json ./
-COPY turbo.json ./
-COPY pnpm-workspace.yaml ./
+# Copy root configs first for better caching
+COPY package.json turbo.json pnpm-workspace.yaml ./
 
-RUN npm install
+# Install ALL dependencies (including dev) for building
+RUN npm install --legacy-peer-deps
 
-# Copy source code
+# Copy all source code
 COPY . .
 
 # Server production image
@@ -22,11 +21,12 @@ COPY package.json ./
 COPY pnpm-workspace.yaml ./
 COPY turbo.json ./
 
-RUN npm install --production
+# Install all dependencies (including dev for pg module and scripts)
+RUN npm install --legacy-peer-deps
 
+# Copy necessary packages
 COPY --from=builder /app/packages/database ./packages/database
-COPY --from=builder /app/packages/server/src ./packages/server/src
-COPY --from=builder /app/packages/server/package.json ./packages/server/
+COPY --from=builder /app/packages/server ./packages/server
 
 ENV NODE_ENV=production
 EXPOSE 3001

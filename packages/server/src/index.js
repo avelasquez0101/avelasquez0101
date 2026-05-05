@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
+const { Pool } = require('pg');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
@@ -12,6 +13,23 @@ const leaderboardRoutes = require('./routes/leaderboard');
 const { apiLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
+
+// Database connection test
+const pool = new Pool({
+  host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || 5432,
+  database: process.env.DB_NAME || 'chgaming',
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD || 'postgres',
+});
+
+pool.query('SELECT NOW()', (err, res) => {
+  if (err) {
+    console.error('❌ Error connecting to database:', err.message);
+  } else {
+    console.log('✅ Database connected:', res.rows[0].now);
+  }
+});
 
 // Security middleware
 app.use(helmet());
@@ -81,6 +99,7 @@ const shutdown = () => {
   if (server) {
     server.close(() => {
       console.log('HTTP server closed');
+      pool.end();
       process.exit(0);
     });
 
@@ -90,6 +109,7 @@ const shutdown = () => {
       process.exit(1);
     }, 10000);
   } else {
+    pool.end();
     process.exit(0);
   }
 };
