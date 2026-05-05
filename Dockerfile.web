@@ -1,0 +1,56 @@
+# Build stage
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Install necessary build tools for native modules
+RUN apk add --no-cache libc6-compat python3 make g++
+
+# Copy root configuration files
+COPY package.json turbo.json pnpm-workspace.yaml ./
+
+# Copy only existing package.json files (verified directories)
+COPY apps/web/package.json ./apps/web/
+COPY packages/server/package.json ./packages/server/
+COPY packages/database/package.json ./packages/database/
+
+# Install dependencies - handle missing workspaces gracefully
+RUN npm install --legacy-peer-deps || \
+    (echo "Trying partial install..." && \
+     npm install --legacy-peer-deps --workspace=@chgaming/web --workspace=@chgaming/server --workspace=@chgaming/database)
+
+# Copy the rest of the application code
+COPY . .
+
+# Build the web app from the root directory
+WORKDIR /app
+RUN npm run build --workspace=@chgaming/web || npm run build
+
+# Production stage
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
+
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+# Copy standalone output (created by next.config.js output: 'standalone')
+COPY --from=builder /app/apps/web/.next/standalone ./
+COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder /app/apps/web/public ./apps/web/public
+
+# Set correct ownership
+RUN chown -R nextjs:nodejs /app
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT 3000
+ENV HOSTNAME "0.0.0.0"
+
+CMD ["node", "server.js"]

@@ -1,0 +1,34 @@
+# Build stage
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy root configs first for better caching
+COPY package.json turbo.json pnpm-workspace.yaml ./
+
+# Install ALL dependencies (including dev) for building
+RUN npm install --legacy-peer-deps
+
+# Copy all source code
+COPY . .
+
+# Server production image
+FROM node:20-alpine AS server-runner
+
+WORKDIR /app
+
+COPY package.json ./
+COPY pnpm-workspace.yaml ./
+COPY turbo.json ./
+
+# Install all dependencies (including dev for pg module and scripts)
+RUN npm install --legacy-peer-deps
+
+# Copy necessary packages
+COPY --from=builder /app/packages/database ./packages/database
+COPY --from=builder /app/packages/server ./packages/server
+
+ENV NODE_ENV=production
+EXPOSE 3001
+
+CMD ["node", "packages/server/src/index.js"]
