@@ -3,30 +3,36 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy root configs first for better caching
-COPY package.json turbo.json pnpm-workspace.yaml ./
+# Copy all root configuration files
+COPY package.json pnpm-workspace.yaml turbo.json ./
 
-# Install ALL dependencies (including dev) for building
+# Install ALL dependencies (including dev) for the entire monorepo
 RUN npm install --legacy-peer-deps
 
 # Copy all source code
-COPY . .
+COPY packages ./packages
+COPY apps ./apps
 
-# Build the web app - ensure Next.js is available
+# Build the web app using workspace command
 WORKDIR /app/apps/web
 RUN npm run build
 
-# Production stage
-FROM nginx:alpine
+# Production stage - use Node.js to serve Next.js standalone
+FROM node:20-alpine AS runner
 
-# Copy custom nginx config
-COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
+WORKDIR /app
 
-# Copy built assets from builder
-COPY --from=builder /app/apps/web/.next/static /usr/share/nginx/html/_next/static
-COPY --from=builder /app/apps/web/public /usr/share/nginx/html
+ENV NODE_ENV=production
+ENV PORT=3000
 
-# Expose port
-EXPOSE 80
+# Copy package.json for web app
+COPY apps/web/package.json ./
 
-CMD ["nginx", "-g", "daemon off;"]
+# Copy built app from builder
+COPY --from=builder /app/apps/web/.next/standalone ./
+COPY --from=builder /app/apps/web/.next/static ./.next/static
+COPY --from=builder /app/apps/web/public ./public
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]

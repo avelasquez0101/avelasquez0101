@@ -39,10 +39,10 @@ for i in {1..30}; do
 done
 
 echo -e "${BLUE}📊 Ejecutando migraciones de base de datos...${NC}"
-docker compose run --rm server sh -c "cd packages/server && npm run migrate" || echo -e "${YELLOW}⚠️ Migraciones fallaron, puede que ya existan las tablas${NC}"
+docker compose run --rm server node packages/server/src/scripts/migrate.js || echo -e "${YELLOW}⚠️ Migraciones fallaron, puede que ya existan las tablas${NC}"
 
 echo -e "${BLUE}🌱 Insertando datos iniciales (seeds)...${NC}"
-docker compose run --rm server sh -c "cd packages/server && npm run seed" || echo -e "${YELLOW}⚠️ Seeds fallaron, puede que ya existan los datos${NC}"
+docker compose run --rm server node packages/server/src/scripts/seed.js || echo -e "${YELLOW}⚠️ Seeds fallaron, puede que ya existan los datos${NC}"
 
 echo -e "${GREEN}🚀 Iniciando todos los servicios...${NC}"
 docker compose up -d
