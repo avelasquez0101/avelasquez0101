@@ -1,0 +1,115 @@
+// Tournament Service - Prisma Schema
+// Models for tournaments, registrations, matches, and disputes
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TournamentFormat {
+  SINGLE_ELIMINATION
+  ROUND_ROBIN
+}
+
+enum TournamentStatus {
+  UPCOMING
+  CHECK_IN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum MatchStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  DISPUTED
+}
+
+model Tournament {
+  id              String            @id @default(uuid())
+  name            String
+  description     String?
+  game            String
+  format          TournamentFormat
+  status          TournamentStatus  @default(UPCOMING)
+  maxParticipants Int               @default(8)
+  currentRound    Int               @default(0)
+  prizePool       Int               @default(0) // En Créditos Arcade
+  entryFee        Int               @default(0) // Costo de entrada (0 = free)
+  startDate       DateTime
+  checkInStart    DateTime
+  checkInEnd      DateTime
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  createdBy       String            // Admin user ID
+  
+  registrations   Registration[]
+  matches         Match[]
+  
+  @@index([game])
+  @@index([status])
+  @@index([startDate])
+}
+
+model Registration {
+  id            String       @id @default(uuid())
+  userId        String
+  tournamentId  String
+  checkedIn     Boolean      @default(false)
+  checkedInAt   DateTime?
+  seed          Int?         // Posición en el bracket
+  finalPosition Int?         // null si no terminó
+  createdAt     DateTime     @default(now())
+  
+  tournament    Tournament   @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, tournamentId])
+  @@index([tournamentId])
+  @@index([userId])
+}
+
+model Match {
+  id              String       @id @default(uuid())
+  tournamentId    String
+  round           Int
+  bracketPosition Int          // Posición en el bracket (1, 2, 3...)
+  player1Id       String
+  player1Name     String?
+  player2Id       String
+  player2Name     String?
+  winnerId        String?
+  player1Score    Int?
+  player2Score    Int?
+  status          MatchStatus  @default(PENDING)
+  scheduledAt     DateTime?
+  completedAt     DateTime?
+  reportedBy      String?      // Quién reportó primero
+  disputeReason   String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  
+  tournament      Tournament   @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  
+  @@index([tournamentId])
+  @@index([round])
+  @@index([status])
+}
+
+model Dispute {
+  id          String    @id @default(uuid())
+  matchId     String    @unique
+  reason      String
+  screenshotUrl String?
+  status      String    @default("PENDING") // PENDING, RESOLVED, REJECTED
+  resolvedBy  String?
+  resolution  String?
+  createdAt   DateTime  @default(now())
+  resolvedAt  DateTime?
+  
+  @@index([status])
+}
