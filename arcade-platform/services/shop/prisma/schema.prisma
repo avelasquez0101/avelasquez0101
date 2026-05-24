@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ItemCategory {
+  AVATAR
+  BANNER
+  BADGE
+}
+
+enum ItemRarity {
+  COMMON
+  RARE
+  EPIC
+  LEGENDARY
+}
+
+model ShopItem {
+  id          String        @id @default(uuid())
+  name        String
+  description String
+  category    ItemCategory
+  rarity      ItemRarity
+  price       Int
+  imageUrl    String
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+
+  purchases   Purchase[]
+}
+
+model Purchase {
+  id        String   @id @default(uuid())
+  userId    String
+  itemId    String
+  price     Int
+  createdAt DateTime @default(now())
+
+  item      ShopItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model UserInventory {
+  id        String   @id @default(uuid())
+  userId    String
+  itemId    String
+  equipped  Boolean  @default(false)
+
+  @@unique([userId, itemId])
+  @@index([userId])
+}
