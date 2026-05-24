@@ -1,93 +1,40 @@
-# Arcade Platform - Plataforma de Torneos Competitivos
+# 🎮 Arcade Platform - Fase 1 (MVP)
 
-## Visión General
+Plataforma de torneos competitivos para eSports. Este repositorio contiene la implementación completa de la **Fase 1: Núcleo Competitivo (MVP)**.
 
-Plataforma de torneos competitivos para gamers, desarrollada en fases siguiendo el principio de "lanzar pronto, medir, iterar y escalar".
+## 📋 Estado del Proyecto
 
-## Roadmap
+### ✅ Completado (Fase 1)
 
-### ✅ Fase 1: Núcleo Competitivo (MVP) - En Progreso
-- **Objetivo:** Validar que los usuarios juegan, compiten y regresan
-- **Duración:** 4-5 meses
-- **Hito Principal:** 1,000 usuarios activos mensuales
+| Servicio/Módulo | Estado | Puerto | Descripción |
+|----------------|--------|--------|-------------|
+| **Auth Service** | ✅ Completo | 3001 | Registro, login, JWT, verificación de email |
+| **Tournament Service** | ✅ Completo | 3002 | Gestión de torneos, brackets, check-in, resultados |
+| **Profile Service** | ✅ Completo | 3004 | XP, niveles, logros, créditos arcade |
+| **Shop Service** | ✅ Completo | 3003 | Tienda virtual, inventario, compras |
+| **Notification Service** | ✅ Completo | 3005 | Emails transaccionales vía RabbitMQ |
+| **Frontend React** | ✅ Completo | 5173 | SPA con autenticación, torneos, tienda y perfil |
+| **Admin Dashboard** | ✅ Completo | - | Panel para crear torneos y gestionar disputas |
+| **API Gateway (NGINX)** | ✅ Completo | 8080 | Enrutamiento y balanceo de carga |
 
-### ⏳ Fase 2: Engagement y Monetización
-- Activar fuentes de ingreso directo y duplicar retención
-
-### ⏳ Fase 3: Comunidad y Crecimiento
-- Convertir usuarios en comunidad y abrir canal B2B
-
-### ⏳ Fase 4: Ecosistema y Escala
-- Autosostenibilidad con UGC y expansión de mercado
-
----
-
-## Arquitectura Técnica - Fase 1
-
-### Stack Tecnológico
-
-**Backend:**
-- Node.js + Express.js
-- Prisma ORM
-- PostgreSQL (base de datos)
-- Redis (caché y sesiones)
-- RabbitMQ (mensajería asíncrona)
-- JWT (autenticación)
-
-**Frontend:**
-- React 18 + Vite
-- TanStack Query
-- Zustand (estado global)
-- TailwindCSS
-
-**Infraestructura:**
-- Docker + Docker Compose
-- NGINX (API Gateway)
-
-### Microservicios Fase 1
-
-| Servicio | Puerto | Responsabilidad | Estado |
-|----------|--------|----------------|---------|
-| **Auth Service** | 3001 | Registro, login, JWT, verificación email | ✅ Completado |
-| **Tournament Service** | 3002 | Gestión de torneos, brackets, resultados | 🔄 Pendiente |
-| **Shop Service** | 3003 | Catálogo, compras, inventario | 🔄 Pendiente |
-| **Profile Service** | 3004 | XP, niveles, logros, créditos | 🔄 Pendiente |
-| **Notification Service** | 3005 | Emails y notificaciones | 🔄 Pendiente |
-| **Admin Service** | 3006 | Panel de administración | 🔄 Pendiente |
-
----
-
-## Estructura del Proyecto
+## 🏗️ Arquitectura
 
 ```
-arcade-platform/
-├── services/
-│   ├── auth/              # ✅ Auth Service
-│   │   ├── src/
-│   │   │   ├── config/
-│   │   │   ├── controllers/
-│   │   │   ├── services/
-│   │   │   ├── middleware/
-│   │   │   ├── routes/
-│   │   │   └── app.js
-│   │   ├── prisma/
-│   │   │   └── schema.prisma
-│   │   ├── package.json
-│   │   └── Dockerfile
-│   ├── tournament/        # 🔄 Pendiente
-│   ├── shop/              # 🔄 Pendiente
-│   ├── profile/           # 🔄 Pendiente
-│   ├── notification/      # 🔄 Pendiente
-│   └── admin/             # 🔄 Pendiente
-├── frontend/              # 🔄 Pendiente
-├── nginx/                 # ✅ Configurado
-├── db/                    # ✅ Scripts init
-└── docker-compose.yml     # ✅ Configurado
+┌─────────────┐     ┌──────────────┐     ┌─────────────────┐
+│   Frontend  │────▶│  NGINX       │────▶│  Microservicios │
+│   (React)   │     │  (Gateway)   │     │  (Node.js)      │
+│   :5173     │     │  :8080       │     │  :3001-3005     │
+└─────────────┘     └──────────────┘     └─────────────────┘
+                                               │
+                    ┌──────────────────────────┼──────────────┐
+                    ▼                          ▼              ▼
+            ┌───────────────┐         ┌────────────┐  ┌────────────┐
+            │  PostgreSQL   │         │   Redis    │  │  RabbitMQ  │
+            │  (5 DBs)      │         │  (Cache)   │  │  (Events)  │
+            └───────────────┘         └────────────┘  └────────────┘
 ```
 
----
-
-## Quick Start - Desarrollo Local
+## 🚀 Inicio Rápido
 
 ### Prerrequisitos
 
@@ -95,155 +42,152 @@ arcade-platform/
 - Node.js 18+ (para desarrollo local)
 - Git
 
-### Iniciar Infraestructura
+### 1. Clonar el repositorio
 
 ```bash
 cd /workspace/arcade-platform
-
-# Iniciar todos los servicios
-docker-compose up -d
-
-# Ver logs
-docker-compose logs -f
-
-# Detener todo
-docker-compose down
 ```
 
-### Auth Service (Ejemplo)
+### 2. Configurar variables de entorno
 
 ```bash
-cd services/auth
+# Generar claves JWT (solo una vez)
+openssl genrsa -out jwt_private.pem 2048
+openssl rsa -in jwt_private.pem -pubout -outform PEM -out jwt_public.pem
 
-# Instalar dependencias
+# Copiar las claves al archivo .env del docker-compose
+export JWT_PRIVATE_KEY=$(cat jwt_private.pem)
+export JWT_PUBLIC_KEY=$(cat jwt_public.pem)
+```
+
+### 3. Levantar toda la infraestructura
+
+```bash
+docker-compose up --build
+```
+
+Esto levantará:
+- PostgreSQL con 5 bases de datos
+- Redis
+- RabbitMQ
+- 5 microservicios backend
+- Frontend React
+- API Gateway NGINX
+
+### 4. Acceder a la aplicación
+
+- **Frontend**: http://localhost:5173
+- **API Gateway**: http://localhost:8080
+- **RabbitMQ Management**: http://localhost:15672 (user: arcade_user, pass: arcade_secure_password_123)
+
+## 📁 Estructura del Proyecto
+
+```
+arcade-platform/
+├── docker-compose.yml          # Orquestación de contenedores
+├── db/
+│   └── init.sql                # Inicialización de databases
+├── nginx/
+│   └── nginx.conf              # Configuración del API Gateway
+├── services/
+│   ├── auth/                   # Servicio de autenticación
+│   ├── tournament/             # Servicio de torneos
+│   ├── profile/                # Servicio de perfiles
+│   ├── shop/                   # Servicio de tienda
+│   └── notification/           # Servicio de notificaciones
+└── frontend/                   # Aplicación React
+    ├── src/
+    │   ├── api/                # Clientes HTTP
+    │   ├── components/         # Componentes reutilizables
+    │   ├── hooks/              # Custom hooks
+    │   ├── pages/              # Páginas principales
+    │   ├── store/              # Estado global (Zustand)
+    │   └── App.jsx             # Router principal
+    └── package.json
+```
+
+## 🔑 Endpoints Principales
+
+### Auth Service (`/api/auth`)
+- `POST /register` - Registro de usuario
+- `POST /login` - Inicio de sesión
+- `POST /logout` - Cerrar sesión
+- `GET /verify-email/:token` - Verificar email
+- `GET /me` - Obtener usuario actual
+
+### Tournament Service (`/api/tournaments`, `/api/matches`)
+- `GET /tournaments` - Listar torneos
+- `POST /tournaments` - Crear torneo (admin)
+- `POST /tournaments/:id/register` - Inscribirse
+- `POST /tournaments/:id/checkin` - Check-in
+- `POST /tournaments/:id/generate-bracket` - Generar bracket (admin)
+- `POST /matches/:id/report` - Reportar resultado
+- `POST /matches/:id/dispute` - Abrir disputa
+
+### Profile Service (`/api/profiles`)
+- `GET /profiles/:userId` - Perfil público
+- `GET /profiles/me` - Mi perfil
+- `POST /internal/profiles/:userId/xp` - Añadir XP (interno)
+- `POST /internal/profiles/:userId/credits/add` - Añadir créditos (interno)
+
+### Shop Service (`/api/shop`)
+- `GET /items` - Catálogo de items
+- `POST /purchase` - Comprar item
+- `GET /inventory` - Mi inventario
+- `POST /inventory/:itemId/equip` - Equipar item
+
+## 🎯 Flujo MVP Completo
+
+1. **Registro/Login**: Usuario crea cuenta y verifica email
+2. **Explorar Torneos**: Ve lista de torneos disponibles
+3. **Inscripción**: Se inscribe en un torneo
+4. **Check-in**: Hace check-in 15 min antes del inicio
+5. **Competición**: El admin genera el bracket, juega su partida
+6. **Reporte**: Reporta el resultado de su match
+7. **Victoria**: Si gana, recibe Créditos Arcade y XP automáticamente
+8. **Tienda**: Gasta sus créditos comprando avatares o insignias
+9. **Perfil**: Personaliza su perfil con los items comprados
+
+## 🛠️ Desarrollo Local
+
+### Instalar dependencias de un servicio
+
+```bash
+cd services/tournament
 npm install
+```
 
-# Copiar variables de entorno
-cp .env.example .env
+### Ejecutar un servicio en modo desarrollo
 
-# Ejecutar migraciones (con Docker corriendo)
-npx prisma migrate dev
-
-# Generar Prisma Client
-npx prisma generate
-
-# Iniciar en modo desarrollo
+```bash
+cd services/tournament
 npm run dev
 ```
 
-El servicio estará disponible en `http://localhost:3001` o vía API Gateway en `http://localhost:8080/api/auth/`
+### Ejecutar migraciones de Prisma
 
----
-
-## Endpoints Auth Service
-
-### Públicos
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| POST | `/auth/register` | Registro de usuario |
-| POST | `/auth/login` | Login |
-| POST | `/auth/refresh` | Refresh access token |
-| GET | `/auth/verify-email/:token` | Verificar email |
-| POST | `/auth/forgot-password` | Inicio recuperación password |
-| POST | `/auth/reset-password/:token` | Resetear password |
-
-### Protegidos (requieren JWT)
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| POST | `/auth/logout` | Logout |
-| GET | `/auth/me` | Obtener usuario actual |
-
----
-
-## Endpoints por Servicio (Planificados)
-
-### Tournament Service
-
-- `GET /tournaments` - Listar torneos
-- `POST /tournaments` - Crear torneo (admin)
-- `GET /tournaments/:id` - Detalle del torneo
-- `POST /tournaments/:id/register` - Inscripción
-- `POST /tournaments/:id/checkin` - Check-in
-- `GET /tournaments/:id/bracket` - Ver bracket
-- `POST /matches/:id/report` - Reportar resultado
-
-### Shop Service
-
-- `GET /shop/items` - Catálogo
-- `POST /shop/purchase` - Comprar item
-- `GET /shop/inventory/:userId` - Inventario
-- `POST /shop/inventory/equip` - Equipar item
-
-### Profile Service
-
-- `GET /profiles/:userId` - Perfil público
-- `GET /profiles/:userId/stats` - Estadísticas
-- `POST /profiles/:userId/xp` - Añadir XP
-- `GET /profiles/:userId/achievements` - Logros
-
----
-
-## Modelo de Datos
-
-### Auth Service
-
-```prisma
-User {
-  id, email, username, passwordHash,
-  isVerified, isActive, createdAt,
-  lastLoginAt, verificationToken, resetToken
-}
+```bash
+cd services/tournament
+npx prisma migrate dev
+npx prisma generate
 ```
 
-### Tournament Service (planificado)
+## 📊 Métricas de la Fase 1
 
-```prisma
-Tournament {
-  id, name, game, format, status,
-  maxParticipants, prizePool, startDate
-}
+- **Usuarios objetivo**: 1,000 usuarios activos mensuales
+- **Torneos soportados**: Eliminación directa y Round Robin
+- **Moneda**: Créditos Arcade (gratis, ganados jugando)
+- **Items en tienda**: Avatares, banners, insignias
 
-Registration {
-  id, userId, tournamentId, checkedIn, seed
-}
+## 🔐 Seguridad
 
-Match {
-  id, tournamentId, round, player1Id, player2Id,
-  winnerId, score, status
-}
-```
+- JWT con RS256 (clave pública/privada)
+- Contraseñas hasheadas con bcrypt (12 rondas)
+- Rate limiting en todos los endpoints
+- Validación de datos con Zod
+- CORS configurado
+- Helmet.js para headers de seguridad
 
----
+## 📝 Licencia
 
-## Métricas y KPIs Fase 1
-
-- **Usuarios Registrados:** Objetivo 1,000
-- **Torneos Completados:** Medir engagement
-- **Tiempo Promedio en Plataforma:** > 30 min/sesión
-- **Retención D7:** > 25%
-- **Tasa de Conversión Registro → Primer Torneo:** > 60%
-
----
-
-## Contribución
-
-Este es un proyecto en desarrollo activo. Las siguientes áreas están pendientes de implementación:
-
-1. ⏳ Tournament Service - Motor de torneos
-2. ⏳ Shop Service - Tienda virtual
-3. ⏳ Profile Service - Sistema de XP y logros
-4. ⏳ Notification Service - Emails y notificaciones
-5. ⏳ Admin Service - Panel de administración
-6. ⏳ Frontend React - Interfaz de usuario
-
----
-
-## Licencia
-
-MIT
-
----
-
-**Estado Actual:** Sprint 1-2 - Auth Service completado ✅
+© 2024 Arcade Platform. Todos los derechos reservados.
