@@ -13,7 +13,7 @@ const apiClient = axios.create({
 // Interceptor para añadir token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = useAuthStore.getState().token;
+    const token = useAuthStore.getState().getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
